@@ -493,28 +493,28 @@ async def _(session: Uninfo):
             day=signDay, exp=exp, num=point
         )
 
-        reward = g_pJsonManager.m_pSign["continuou"].get(f"{signDay}", None)
+        #reward = g_pJsonManager.m_pSign["continuou"].get(f"{signDay}", None)
 
-        if reward:
-            extraPoint = reward.get("point", 0)
-            extraExp = reward.get("exp", 0)
+        #if reward:
+            #extraPoint = reward.get("point", 0)
+            #extraExp = reward.get("exp", 0)
 
-            plant = reward.get("plant", {})
+            #plant = reward.get("plant", {})
 
-            message += g_sTranslation["signIn"]["grandTotal"].format(
-                exp=extraExp, num=extraPoint
-            )
+            #message += g_sTranslation["signIn"]["grandTotal"].format(
+                #exp=extraExp, num=extraPoint
+            #)
 
-            vipPoint = reward.get("vipPoint", 0)
+            #vipPoint = reward.get("vipPoint", 0)
 
-            if vipPoint > 0:
-                message += g_sTranslation["signIn"]["grandTotal1"].format(num=vipPoint)
+            #if vipPoint > 0:
+                #message += g_sTranslation["signIn"]["grandTotal1"].format(num=vipPoint)
 
-            if plant:
-                for key, value in plant.items():
-                    message += g_sTranslation["signIn"]["grandTotal2"].format(
-                        name=key, num=value
-                    )
+            #if plant:
+                #for key, value in plant.items():
+                    #message += g_sTranslation["signIn"]["grandTotal2"].format(
+                        #name=key, num=value
+                    #)
     else:
         message = g_sTranslation["signIn"]["error1"]
 

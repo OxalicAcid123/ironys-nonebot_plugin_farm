@@ -136,16 +136,16 @@ class CUserSignDB(CSqlManager):
             expMax, expMin, pointMax, pointMin = [
                 g_pJsonManager.m_pSign.get(key, default)
                 for key, default in (
-                    ("exp_max", 50),
-                    ("exp_min", 5),
-                    ("point_max", 2000),
-                    ("point_min", 200),
+                    ("exp_max", 260),
+                    ("exp_min", 80),
+                    ("point_max", 200000),
+                    ("point_min", 2000),
                 )
             ]
 
             exp = random.randint(expMin, expMax)
             point = random.randint(pointMin, pointMax)
-            vipPoint = 0
+            vipPoint = random.randint(4,6)
 
             async with cls._transaction():
                 await cls.m_pDB.execute(
@@ -219,21 +219,22 @@ class CUserSignDB(CSqlManager):
                     )
 
             # 计算累签奖励
-            reward = g_pJsonManager.m_pSign["continuou"].get(f"{totalSignDays}", None)
+            # reward = g_pJsonManager.m_pSign["continuou"].get(f"{totalSignDays}", None)
 
-            if reward:
-                point += reward.get("point", 0)
-                exp += reward.get("exp", 0)
-                vipPoint = reward.get("vipPoint", 0)
+            #if reward:
+                #point += reward.get("point", 0)
+                #exp += reward.get("exp", 0)
+                #vipPoint = reward.get("vipPoint", 0)
 
-                plant = reward.get("plant", {})
+                #plant = reward.get("plant", {})
 
-                if plant:
-                    for key, value in plant.items():
-                        await g_pDBService.userSeed.addUserSeedByUid(uid, key, value)
+                #if plant:
+                    #for key, value in plant.items():
+                        #await g_pDBService.userSeed.addUserSeedByUid(uid, key, value)
 
             if g_bIsDebug:
-                exp += 9999
+                #exp += 9999
+                pass
 
             # 向数据库更新
             currentExp = await g_pDBService.user.getUserExpByUid(uid)
