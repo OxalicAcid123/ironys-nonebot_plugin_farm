@@ -33,7 +33,7 @@ g_sConfigPath = Path(__file__).resolve().parent / "config"
 g_sSignInPath = g_sConfigPath / "sign_in.json"
 
 # 土地等级上限
-g_iSoilLevelMax = 3
+g_iSoilLevelMax = 4
 
 # 农场同一文本
 g_sTranslation = {
