@@ -488,10 +488,16 @@ async def _(session: Uninfo):
         exp, point = await g_pDBService.userSign.getUserSignRewardByDate(
             uid, toDay.strftime("%Y-%m-%d")
         )
-
-        message += g_sTranslation["signIn"]["success"].format(
-            day=signDay, exp=exp, num=point
-        )
+        
+        if status == 1:
+            message += g_sTranslation["signIn"]["success"].format(
+                day=signDay, exp=exp, num=point
+            )
+        
+        elif status == 2:
+            message += g_sTranslation["signIn"]["already"].format(
+                day=signDay
+            )
 
         #reward = g_pJsonManager.m_pSign["continuou"].get(f"{signDay}", None)
 
