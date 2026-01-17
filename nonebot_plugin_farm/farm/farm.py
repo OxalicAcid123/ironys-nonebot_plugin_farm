@@ -633,20 +633,52 @@ class CFarmManager:
             return g_sTranslation["harvest"]["error"]
 
     @classmethod
-    async def eradicate(cls, uid: str) -> str:
-        """铲除作物
-        TODO 缺少随意铲除作物 目前只能铲除荒废作物
+    async def getEradicateState(cls, uid: str) -> dict:
+        """检查用户田地的作物状态
+        用于判断是否需要弹出确认提示
+        
         Args:
             uid (str): 用户Uid
 
         Returns:
-            str: 返回
+            dict: {"withered": int, "immature": int} 枯萎和未成熟作物的数量
+        """
+        soilNumber = await g_pDBService.user.getUserSoilByUid(uid)
+        status = {"withered": 0, "immature": 0}
+
+        for i in range(1, soilNumber + 1):
+            soilInfo = await g_pDBService.userSoil.getUserSoil(uid, i)
+            if not soilInfo or soilInfo.get("isSoilPlanted", 1) == 0:
+                continue
+            
+            # 判断枯萎状态: 假设 > 0 为枯萎 (参考原代码 == 0 为非枯萎)
+            if soilInfo.get("wiltStatus", 0) > 0:
+                status["withered"] += 1
+            else:
+                status["immature"] += 1
+                
+        return status
+
+    @classmethod
+    async def eradicate(cls, uid: str, confirm_immature: bool = False) -> str:
+        """铲除作物
+        
+        Args:
+            uid (str): 用户Uid
+            confirm_immature (bool): 是否确认铲除未成熟作物。
+                                     False: 仅铲除枯萎作物 (跳过未成熟)
+                                     True: 铲除所有作物 (包括未成熟)
+
+        Returns:
+            str: 返回结果文本
         """
         soilNumber = await g_pDBService.user.getUserSoilByUid(uid)
 
         await g_pEventManager.m_beforeEradicate.emit(uid=uid)  # type: ignore
 
         experience = 0
+        eradic_count = 0 # 记录实际铲除的数量，用于判断是否返回无操作提示
+
         for i in range(1, soilNumber + 1):
             soilInfo = await g_pDBService.userSoil.getUserSoil(uid, i)
             if not soilInfo:
@@ -656,17 +688,23 @@ class CFarmManager:
             if soilInfo.get("isSoilPlanted", 1) == 0:
                 continue
 
-            # 如果不是枯萎状态
-            if soilInfo.get("wiltStatus", 0) == 0:
+            is_withered = soilInfo.get("wiltStatus", 0) > 0
+            
+            # 如果既不是枯萎作物，且未确认铲除未成熟作物，则跳过
+            if not is_withered and not confirm_immature:
                 continue
 
-            experience += 7  # 铲除荒废作物固定经验值
+            # 经验值计算
+            if is_withered:
+                experience += 7  # 铲除荒废作物固定经验值
+
+            if not is_withered:
+                experience += 12  # 铲除未成熟作物固定经验值
 
             if g_bIsDebug:
-                # experience += 999
-                pass
+                experience += 999 # 什么时候让我再开一次，偶捏该
 
-            # 更新数据库操作
+            # 执行铲除（更新数据库）
             await g_pDBService.userSoil.updateUserSoilFields(
                 uid,
                 i,
@@ -681,15 +719,17 @@ class CFarmManager:
 
             # 铲除作物会将偷菜记录清空
             await g_pDBService.userSteal.deleteStealRecord(uid, i)
-
+            eradic_count += 1
+            
             await g_pEventManager.m_afterEradicate.emit(uid=uid, soilIndex=i)  # type: ignore
 
+        # 结算
         if experience > 0:
             exp = await g_pDBService.user.getUserExpByUid(uid)
             await g_pDBService.user.updateUserExpByUid(uid, exp + experience)
-
             return g_sTranslation["eradicate"]["success"].format(exp=experience)
         else:
+            # 没有铲除任何东西
             return g_sTranslation["eradicate"]["error"]
 
     @classmethod

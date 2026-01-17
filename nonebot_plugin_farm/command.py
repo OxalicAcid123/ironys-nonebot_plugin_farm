@@ -301,8 +301,40 @@ async def _(session: Uninfo):
     if not await g_pToolManager.isRegisteredByUid(uid):
         return
 
-    result = await g_pFarmManager.eradicate(uid)
-    await MessageUtils.build_message(result).send(reply_to=True)
+    # 1. 获取作物状态
+    state = await g_pFarmManager.getEradicateState(uid)
+    
+    # 2. 判断逻辑
+    # 如果有未成熟作物，需要确认
+    if state["immature"] > 0:
+        confirm_msg = g_sTranslation["eradicate"]["confirm"].format(num=state["immature"])
+        
+        await MessageUtils.build_message(confirm_msg).send(reply_to=True)
+
+        @waiter(waits=["message"], keep_session=True)
+        async def check(event: Event):
+            return event.get_plaintext()
+
+        resp = await check.wait(timeout=30) # 设置30秒超时
+        
+        if resp is None:
+            await MessageUtils.build_message(g_sTranslation["eradicate"]["timeOut"]).send(reply_to=True)
+            return
+            
+        if resp != "是":
+            await MessageUtils.build_message("未铲除未成熟作物。").send(reply_to=True)
+            result = await g_pFarmManager.eradicate(uid, confirm_immature=False)
+            await MessageUtils.build_message(result).send(reply_to=True)
+            return
+            
+        # 用户确认：执行铲除（参数为 True）
+        result = await g_pFarmManager.eradicate(uid, confirm_immature=True)
+        await MessageUtils.build_message(result).send(reply_to=True)
+
+    else:
+        # 没有未成熟作物（只有枯萎或为空），直接执行原有逻辑（参数为 False）
+        result = await g_pFarmManager.eradicate(uid, confirm_immature=False)
+        await MessageUtils.build_message(result).send(reply_to=True)
 
 
 diuse_farm.shortcut(
@@ -488,10 +520,16 @@ async def _(session: Uninfo):
         exp, point = await g_pDBService.userSign.getUserSignRewardByDate(
             uid, toDay.strftime("%Y-%m-%d")
         )
-
-        message += g_sTranslation["signIn"]["success"].format(
-            day=signDay, exp=exp, num=point
-        )
+        
+        if status == 1:
+            message += g_sTranslation["signIn"]["success"].format(
+                day=signDay, exp=exp, num=point
+            )
+        
+        elif status == 2:
+            message += g_sTranslation["signIn"]["already"].format(
+                day=signDay
+            )
 
         #reward = g_pJsonManager.m_pSign["continuou"].get(f"{signDay}", None)
 

@@ -70,7 +70,9 @@ g_sTranslation = {
         "error": "❌ 收获失败，请稍后重试！⏳",
     },
     "eradicate": {
-        "success": "🗑️ 成功铲除荒废作物，累计获得经验：{exp} ✨",
+        "success": "🗑️ 成功铲除作物，累计获得经验：{exp} ✨",
+        "confirm": "⚠️ 检测到田地中有 {num} 个未成熟作物，是否确认一并铲除？\n回复“是”确认，否则取消。 🚜",
+        "timeOut": "⏰ 等待铲除回复超时，请重试",
         "error": "❌ 没有可以铲除的作物 🚜",
     },
     "reclamation": {
@@ -109,6 +111,7 @@ g_sTranslation = {
     },
     "signIn": {
         "success": "📝 签到成功！累计签到天数：{day}\n🎁 获得经验{exp}，获得金币{num} 💰",
+        "already": "📝 今日已签到，累计签到天数：{day} 🌟",
         "grandTotal": "\n🎉 成功领取累计签到奖励：\n✨ 额外获得经验{exp}，额外获得金币{num} 🥳",
         "grandTotal1": "，额外获得点券{num} 🎫",
         "grandTotal2": "\n🌱 获得{name}种子 * {num} 🌟",
